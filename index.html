@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Compte Courant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        form label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        form button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        form button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tableau des Opérations et Intérêt Simple</h1>
+        <form id="operationForm">
+            <label for="initialBalance">Solde Initial (TND) :</label>
+            <input type="number" id="initialBalance" step="0.01" required>
+
+            <label for="operationDate">Date d'Opération :</label>
+            <input type="date" id="operationDate" required>
+
+            <label for="debit">Débit (TND) :</label>
+            <input type="number" id="debit" step="0.01" value="0">
+
+            <label for="credit">Crédit (TND) :</label>
+            <input type="number" id="credit" step="0.01" value="0">
+
+            <label for="rate">Taux d'Intérêt Mensuel (%) :</label>
+            <input type="number" id="rate" step="0.01" required>
+
+            <button type="button" onclick="addOperation()">Ajouter l'Opération</button>
+        </form>
+
+        <table id="operationsTable">
+            <thead>
+                <tr>
+                    <th>Date d'Opération</th>
+                    <th>Date Valeur</th>
+                    <th>Nombre de Jours</th>
+                    <th>Débit (TND)</th>
+                    <th>Crédit (TND)</th>
+                    <th>Solde (TND)</th>
+                    <th>Intérêt (TND)</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let balance = 0;
+        let lastValueDate = null;
+
+        function addOperation() {
+            const initialBalanceInput = document.getElementById('initialBalance');
+            if (balance === 0 && initialBalanceInput.value) {
+                balance = parseFloat(initialBalanceInput.value);
+                initialBalanceInput.disabled = true;
+            }
+
+            const operationDate = document.getElementById('operationDate').value;
+            const debit = parseFloat(document.getElementById('debit').value) || 0;
+            const credit = parseFloat(document.getElementById('credit').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value);
+
+            if (!operationDate || isNaN(rate)) {
+                alert('Veuillez remplir tous les champs correctement.');
+                return;
+            }
+
+            const operationDateObj = new Date(operationDate);
+            const valueDateObj = new Date(operationDateObj);
+
+            if (debit > 0) {
+                valueDateObj.setDate(valueDateObj.getDate() - 1);
+            } else if (credit > 0) {
+                valueDateObj.setDate(valueDateObj.getDate() + 1);
+            }
+
+            const valueDate = valueDateObj.toISOString().split('T')[0];
+            const days = lastValueDate ? Math.floor((valueDateObj - new Date(lastValueDate)) / (1000 * 60 * 60 * 24)) : 0;
+
+            balance += credit - debit;
+            const interest = ((balance * rate * days) / (100 * 30)).toFixed(2);
+
+            const tableBody = document.querySelector('#operationsTable tbody');
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${operationDate}</td>
+                <td>${valueDate}</td>
+                <td>${days}</td>
+                <td>${debit.toFixed(2)}</td>
+                <td>${credit.toFixed(2)}</td>
+                <td>${balance.toFixed(2)}</td>
+                <td>${interest}</td>
+            `;
+
+            tableBody.appendChild(row);
+            lastValueDate = valueDate;
+        }
+    </script>
+</body>
+</html>
